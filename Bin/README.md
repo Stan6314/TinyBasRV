@@ -1,15 +1,15 @@
 Notice!
 =======
 
-It turns out that when loading a HEX file into the microcontroller memory, the latest version 2.70 of WCH-LinkUtility does not work correctly. When using the Program (F10) command, it only loads the first 16 bytes. Therefore, use an older version. Until the bug is fixed, I have attached version 2.30 here, which works correctly.
-Verify the memory programming using View - Read Chip Flash.
-Maybe you can also try version 2.10 from MounRiver studio version 1.92.
+Be careful when reading and downloading HEX files from GitHub. When downloading a file, the end of the line is truncated to a single LF character (like in Linux). However, WCH-LinkUtility requires Windows-style line termination - CR+LF! When loading a file into its buffer, WCH-LinkUtility will only load one line of HEX file!
+
+WCH-LinkUtility then acts as if it programmed the entire memory, but only 16 bytes are written. That is why the HEX files are now saved in .zip format.
 
 * * *
 
 Upozornění!
 ===========
 
-Ukazuje se, že při nahrávání HEX souboru do paměti mikrořadiče, nefunguje poslední verze 2.70 WCH-LinkUtility správně. Při příkazu Program (F10) nahraje pouze prvních 16 bajtů. Použijte proto nějakou starší verzi. Dokud chyba nebude opravena, přiložil jsem zde verzi 2.30, která funguje správně.
-Ověřte si naprogramování paměti pomocí View - Read Chip Flash.
-Možná můžete zkusit i verzi 2.10 z MounRiver studia verze 1.92.
+Dejte si pozor na čtení a stahování HEX souborů z GitHub. Při stažení souboru je konec řádku zkrácen na jeden znak LF (jako v Linuxu). WCH-LinkUtility ale vyžaduje ukončení řádku ve stylu Windows - CR+LF! Při načítání souboru do svého bufferu pak WCH-LinkUtility načte pouze jeden řádek HEX souboru!
+
+WCH-LinkUtility pak fungují jakoby naprogramovaly celou paměť, ale zapíše se pouze 16 bajtů. Proto jsou HEX soubory nyní uloženy v .zip formátu.

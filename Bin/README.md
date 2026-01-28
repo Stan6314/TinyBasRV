@@ -1,7 +1,7 @@
 Notice!
 =======
 
-Be careful when reading and downloading HEX files from GitHub. When downloading a file, the end of the line is truncated to a single LF character (like in Linux). However, WCH-LinkUtility requires Windows-style line termination - CR+LF! When loading a file into its buffer, WCH-LinkUtility will only load one line of HEX file!
+Be careful when reading and downloading HEX files from GitHub. When downloading a file, the end of the line is truncated to a single LF character (Linux-style). However, WCH-LinkUtility requires Windows-style line termination - CR+LF! When loading a file into its buffer, WCH-LinkUtility will only load one line of HEX file!
 
 WCH-LinkUtility then acts as if it programmed the entire memory, but only 16 bytes are written. That is why the HEX files are now saved in .zip format.
 

@@ -1,8 +1,8 @@
 /********************************** (C) COPYRIGHT *******************************
  * File Name          : main.c
  * Author             : Stan6314
- * Version            : V1.0
- * Date               : 2025/07/02
+ * Version            : V1.0a (speed up TIM1_UP_IRQHandler)
+ * Date               : 2026/03/08
  * Description        : TinyBasic for CH32V003
  *      + character constants are in charstable.h
  *      + oscillator settings mus be written to systemv00x.c
@@ -16,7 +16,7 @@
 // change the settings #define SYSCLK_FREQ_48MHZ_HSI 48000000 to #define SYSCLK_FREQ_48MHz_HSE 48000000
 // in the file system_ch32v00x.c
 // For RC oscillator line must be commented and #define SYSCLK_FREQ_48MHZ_HSI 48000000 in the file system_ch32v00x.c
-#define SYSCLK_EXT_CRYSTAL
+//#define SYSCLK_EXT_CRYSTAL
 
 #include "debug.h"
 #include "ch32v00x_dma.h"
@@ -27,8 +27,6 @@ u_int16_t nVGAline;                // VGA displayed line counter (0 - 525)
 volatile u_int8_t DMABuff[47];      // Buffer for DMA to SPI transfer
 volatile u_int8_t VideoRAM[800];    // VideoRAM for 25 * 32 chars
 volatile u_int16_t nDispChar=0;    // Which character (line) will be displayed
-volatile u_int16_t nProcesChar=0;   // Which character is prepared for display
-volatile u_int16_t rowPointer;      // Pointer to char table for rows 0..7
 volatile u_int32_t basTimer;      // Internal timer for Tiny BASIC TIME command incremented with vertical sync
 
 // Global variables for Tiny BASIC
@@ -413,26 +411,27 @@ void EXTI7_0_IRQHandler(void) {
 /*********************************************************************
  * @fn      TIM1_UP_IRQHandler
  * @brief   This function handles TIM1 UP interrupt
- *          generates data and signals for VGA display and update TIME counter
+ *          generates data and signals for VGA display and update TIMEr counter
  */
 void TIM1_UP_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void TIM1_UP_IRQHandler(void)
 {
     if(TIM_GetITStatus(TIM1, TIM_IT_Update)==SET)
     {
-        // Prepare data for VGA line od display (takes 1 to 16 usec)
-        if((nVGAline < 400) && !(nVGAline & 0x0001)) {
+        // Prepare data for VGA line od display (takes 1 to 14 usec)
+        if((nVGAline < 400) && (nVGAline & 0x0001)) {
             if(nDispChar >= 800) nDispChar=0;    // All video RAM is displayed, return to begin
-            nProcesChar=nDispChar;
-            rowPointer = (nVGAline & 0x000E) << 6;   // Set pointer to char table on line base
-            for(u_int16_t i=0; i<32; i++) DMABuff[i] = CharTable[rowPointer + (u16)VideoRAM[nProcesChar+i]];
+            register u_int32_t nProcesChar=nDispChar; // Where the line starts
+            register u_int32_t rowPointer = (nVGAline & 0x000E) << 6;   // Set pointer to char table on line base
+            for(register u_int32_t i=0; i<32; i++) DMABuff[i] = CharTable[rowPointer + (u16)VideoRAM[nProcesChar+i]];
             if(rowPointer >= 0x380) nDispChar += 32;
+        }  else {
+            if(nVGAline == 400) for(u_int16_t i=0; i<32; i++) DMABuff[i] = 0x00;   // Clear buffer
+            if(nVGAline > 525) nVGAline = 0;       // VGA has 525 lines total
+            if(nVGAline == 460) GPIOC->BSHR = 0x00080000;   // Start vertical sync pulse
+            if(nVGAline == 462) GPIOC->BSHR = 0x00000008;   // Stop vertical sync pulse
         }
-        if(nVGAline == 400) for(u_int16_t i=0; i<32; i++) DMABuff[i] = 0x00;   // Clear buffer
         nVGAline++;     // Update VGA lines counter
-        if(nVGAline >= 525) nVGAline = 0;       // VGA has 525 lines total
-        if(nVGAline == 460) GPIOC->BSHR = 0x00080000;   // Start vertical sync pulse
-        if(nVGAline == 462) GPIOC->BSHR = 0x00000008;   // Stop vertical sync pulse
         basTimer++;     // Increment timer for Basic
     }
     TIM_ClearITPendingBit( TIM1, TIM_IT_Update );
